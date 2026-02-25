@@ -1,0 +1,5 @@
+scenario,predicted_price,interest_rate,inflation_rate,population_growth,price_difference,price_difference_pct
+Current,892678.25,4.2,2.3,1.9,0.0,0.0
+Low Interest,910038.6,3.0,2.3,1.9,17360.375,1.9447516
+High Interest,859588.44,6.0,2.3,1.9,-33089.812,-3.7068017
+High Growth,913020.0,4.2,3.5,2.5,20341.75,2.2787325

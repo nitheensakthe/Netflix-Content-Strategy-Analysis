@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Predict Property Price{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Property Price Prediction</h1>
+    <p>Enter property details to get an AI-powered price estimate</p>
+</div>
+
+{% if error %}
+<div class="alert alert-error">
+    <strong>Error:</strong> {{ error }}
+</div>
+{% endif %}
+
+<div class="prediction-container">
+    <form method="POST" class="prediction-form">
+        <div class="form-section">
+            <h3>Property Details</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="location_type">Location Type</label>
+                    <select name="location_type" id="location_type" required>
+                        <option value="Urban" {% if property_data and property_data.location_type == 'Urban' %}selected{% endif %}>Urban</option>
+                        <option value="Suburban" {% if property_data and property_data.location_type == 'Suburban' %}selected{% endif %}>Suburban</option>
+                        <option value="Metropolitan" {% if property_data and property_data.location_type == 'Metropolitan' %}selected{% endif %}>Metropolitan</option>
+                        <option value="Rural" {% if property_data and property_data.location_type == 'Rural' %}selected{% endif %}>Rural</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="property_type">Property Type</label>
+                    <select name="property_type" id="property_type" required>
+                        <option value="House" {% if property_data and property_data.property_type == 'House' %}selected{% endif %}>House</option>
+                        <option value="Apartment" {% if property_data and property_data.property_type == 'Apartment' %}selected{% endif %}>Apartment</option>
+                        <option value="Villa" {% if property_data and property_data.property_type == 'Villa' %}selected{% endif %}>Villa</option>
+                        <option value="Condo" {% if property_data and property_data.property_type == 'Condo' %}selected{% endif %}>Condo</option>
+                        <option value="Townhouse" {% if property_data and property_data.property_type == 'Townhouse' %}selected{% endif %}>Townhouse</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="area">Area (sq ft)</label>
+                    <input type="number" name="area" id="area" min="500" max="10000" value="{% if property_data %}{{ property_data.area }}{% else %}2000{% endif %}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="bedrooms">Bedrooms</label>
+                    <input type="number" name="bedrooms" id="bedrooms" min="1" max="10" value="{% if property_data %}{{ property_data.bedrooms }}{% else %}3{% endif %}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="bathrooms">Bathrooms</label>
+                    <input type="number" name="bathrooms" id="bathrooms" min="1" max="10" value="{% if property_data %}{{ property_data.bathrooms }}{% else %}2{% endif %}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="age">Property Age (years)</label>
+                    <input type="number" name="age" id="age" min="0" max="100" step="0.5" value="{% if property_data %}{{ property_data.age }}{% else %}5{% endif %}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="distance_to_city">Distance to City (km)</label>
+                    <input type="number" name="distance_to_city" id="distance_to_city" min="0" max="100" step="0.1" value="{% if property_data %}{{ property_data.distance_to_city }}{% else %}10{% endif %}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="infrastructure_score">Infrastructure Score (1-10)</label>
+                    <input type="number" name="infrastructure_score" id="infrastructure_score" min="1" max="10" step="0.1" value="{% if property_data %}{{ property_data.infrastructure_score }}{% else %}7{% endif %}" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Economic Factors</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="interest_rate">Interest Rate (%)</label>
+                    <input type="number" name="interest_rate" id="interest_rate" min="0" max="15" step="0.1" value="{% if property_data %}{{ property_data.interest_rate }}{% else %}4.5{% endif %}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="inflation_rate">Inflation Rate (%)</label>
+                    <input type="number" name="inflation_rate" id="inflation_rate" min="0" max="15" step="0.1" value="{% if property_data %}{{ property_data.inflation_rate }}{% else %}2.5{% endif %}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="population_growth">Population Growth (%)</label>
+                    <input type="number" name="population_growth" id="population_growth" min="-5" max="10" step="0.1" value="{% if property_data %}{{ property_data.population_growth }}{% else %}1.5{% endif %}" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Prediction Model</h3>
+            <div class="form-group">
+                <label for="model">Select ML Model</label>
+                <select name="model" id="model">
+                    <option value="xgboost" {% if model_used == 'xgboost' %}selected{% endif %}>XGBoost (Recommended)</option>
+                    <option value="gradient_boosting" {% if model_used == 'gradient_boosting' %}selected{% endif %}>Gradient Boosting (Best Accuracy)</option>
+                    <option value="random_forest" {% if model_used == 'random_forest' %}selected{% endif %}>Random Forest</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large">Predict Price</button>
+    </form>
+
+    {% if prediction %}
+    <div class="results-panel">
+        <h2>Prediction Results</h2>
+        
+        <div class="result-highlight">
+            <div class="result-label">Estimated Property Value</div>
+            <div class="result-value">${{ "%.2f"|format(prediction)|replace(',', '_')|replace('.', ',')|replace('_', '.') }}</div>
+            <div class="result-model">Using {{ model_used.replace('_', ' ').title() }} Model</div>
+        </div>
+
+        {% if predictions %}
+        <div class="model-comparison">
+            <h3>All Model Predictions</h3>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Predicted Price</th>
+                        <th>Difference from Main</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for model, price in predictions.items() %}
+                    <tr {% if model == model_used %}class="active-model"{% endif %}>
+                        <td>{{ model.replace('_', ' ').title() }}</td>
+                        <td>${{ "%.2f"|format(price) }}</td>
+                        <td>
+                            {% set diff = price - prediction %}
+                            {% if diff > 0 %}
+                            <span class="positive">+${{ "%.2f"|format(diff) }}</span>
+                            {% elif diff < 0 %}
+                            <span class="negative">${{ "%.2f"|format(diff) }}</span>
+                            {% else %}
+                            <span>$0.00</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

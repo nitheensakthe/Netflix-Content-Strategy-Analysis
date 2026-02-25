@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Economic Scenarios{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Economic Scenario Comparison</h1>
+    <p>Compare property values under different economic conditions</p>
+</div>
+
+{% if error %}
+<div class="alert alert-error">
+    <strong>Error:</strong> {{ error }}
+</div>
+{% endif %}
+
+<div class="prediction-container">
+    <form method="POST" class="prediction-form">
+        <div class="form-section">
+            <h3>Base Property Details</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="location_type">Location Type</label>
+                    <select name="location_type" id="location_type" required>
+                        <option value="Urban" {% if property_data and property_data.location_type == 'Urban' %}selected{% endif %}>Urban</option>
+                        <option value="Suburban" {% if property_data and property_data.location_type == 'Suburban' %}selected{% endif %}>Suburban</option>
+                        <option value="Metropolitan" {% if property_data and property_data.location_type == 'Metropolitan' %}selected{% endif %}>Metropolitan</option>
+                        <option value="Rural" {% if property_data and property_data.location_type == 'Rural' %}selected{% endif %}>Rural</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="property_type">Property Type</label>
+                    <select name="property_type" id="property_type" required>
+                        <option value="House" {% if property_data and property_data.property_type == 'House' %}selected{% endif %}>House</option>
+                        <option value="Apartment" {% if property_data and property_data.property_type == 'Apartment' %}selected{% endif %}>Apartment</option>
+                        <option value="Villa" {% if property_data and property_data.property_type == 'Villa' %}selected{% endif %}>Villa</option>
+                        <option value="Condo" {% if property_data and property_data.property_type == 'Condo' %}selected{% endif %}>Condo</option>
+                        <option value="Townhouse" {% if property_data and property_data.property_type == 'Townhouse' %}selected{% endif %}>Townhouse</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="area">Area (sq ft)</label>
+                    <input type="number" name="area" id="area" min="500" max="10000" value="{% if property_data %}{{ property_data.area }}{% else %}2000{% endif %}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="bedrooms">Bedrooms</label>
+                    <input type="number" name="bedrooms" id="bedrooms" min="1" max="10" value="{% if property_data %}{{ property_data.bedrooms }}{% else %}3{% endif %}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="bathrooms">Bathrooms</label>
+                    <input type="number" name="bathrooms" id="bathrooms" min="1" max="10" value="{% if property_data %}{{ property_data.bathrooms }}{% else %}2{% endif %}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="age">Property Age (years)</label>
+                    <input type="number" name="age" id="age" min="0" max="100" step="0.5" value="{% if property_data %}{{ property_data.age }}{% else %}5{% endif %}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="distance_to_city">Distance to City (km)</label>
+                    <input type="number" name="distance_to_city" id="distance_to_city" min="0" max="100" step="0.1" value="{% if property_data %}{{ property_data.distance_to_city }}{% else %}10{% endif %}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="infrastructure_score">Infrastructure Score (1-10)</label>
+                    <input type="number" name="infrastructure_score" id="infrastructure_score" min="1" max="10" step="0.1" value="{% if property_data %}{{ property_data.infrastructure_score }}{% else %}7{% endif %}" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Model Selection</h3>
+            <div class="form-group">
+                <label for="model">Select ML Model</label>
+                <select name="model" id="model">
+                    <option value="xgboost" {% if model_used == 'xgboost' %}selected{% endif %}>XGBoost (Recommended)</option>
+                    <option value="gradient_boosting" {% if model_used == 'gradient_boosting' %}selected{% endif %}>Gradient Boosting</option>
+                    <option value="random_forest" {% if model_used == 'random_forest' %}selected{% endif %}>Random Forest</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large">Compare Scenarios</button>
+    </form>
+
+    {% if scenarios %}
+    <div class="results-panel">
+        <h2>Scenario Analysis Results</h2>
+        
+        <div class="scenarios-grid">
+            {% for scenario_name, price in scenarios.items() %}
+            <div class="scenario-card">
+                <h4>{{ scenario_name.replace('_', ' ').title() }}</h4>
+                <div class="scenario-price">${{ "%.2f"|format(price) }}</div>
+                {% if scenarios.baseline %}
+                    {% set diff = price - scenarios.baseline %}
+                    {% set pct = (diff / scenarios.baseline) * 100 %}
+                    <div class="scenario-change {% if diff > 0 %}positive{% elif diff < 0 %}negative{% endif %}">
+                        {% if diff > 0 %}+{% endif %}${{ "%.2f"|format(diff) }}
+                        <br>
+                        ({% if diff > 0 %}+{% endif %}{{ "%.2f"|format(pct) }}%)
+                    </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="chart-container">
+            <div id="scenariosChart"></div>
+        </div>
+
+        <div class="scenario-descriptions">
+            <h3>Scenario Descriptions</h3>
+            <div class="description-grid">
+                <div class="description-item">
+                    <h4>Baseline</h4>
+                    <p>Current economic conditions with moderate interest rates (4.5%) and stable inflation (2.5%)</p>
+                </div>
+                <div class="description-item">
+                    <h4>Economic Boom</h4>
+                    <p>Low interest rates (3%), low inflation (1.5%), high population growth (3%)</p>
+                </div>
+                <div class="description-item">
+                    <h4>Recession</h4>
+                    <p>High interest rates (7%), low inflation (1%), negative population growth (-0.5%)</p>
+                </div>
+                <div class="description-item">
+                    <h4>High Interest Rates</h4>
+                    <p>Elevated rates (7%), moderate inflation (2.5%), normal population growth (1.5%)</p>
+                </div>
+                <div class="description-item">
+                    <h4>High Inflation</h4>
+                    <p>Normal rates (4.5%), high inflation (6%), normal population growth (1.5%)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var scenarios = {{ scenarios|tojson }};
+        var labels = [];
+        var values = [];
+        var colors = [];
+        
+        var colorMap = {
+            'baseline': '#2196F3',
+            'economic_boom': '#4CAF50',
+            'recession': '#F44336',
+            'high_interest_rates': '#FF9800',
+            'high_inflation': '#9C27B0'
+        };
+
+        for (var key in scenarios) {
+            labels.push(key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+            values.push(scenarios[key]);
+            colors.push(colorMap[key] || '#757575');
+        }
+
+        var trace = {
+            x: labels,
+            y: values,
+            type: 'bar',
+            marker: {color: colors}
+        };
+
+        var layout = {
+            title: 'Property Value by Economic Scenario',
+            xaxis: {title: 'Scenario'},
+            yaxis: {title: 'Predicted Price ($)'}
+        };
+
+        Plotly.newPlot('scenariosChart', [trace], layout);
+    </script>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Real Estate Price Prediction{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>🏠 Real Estate Price Predictor</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/" class="{% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
+                <li><a href="/predict" class="{% if request.endpoint == 'predict' %}active{% endif %}">Predict</a></li>
+                <li><a href="/forecast" class="{% if request.endpoint == 'forecast' %}active{% endif %}">Forecast</a></li>
+                <li><a href="/scenarios" class="{% if request.endpoint == 'scenarios' %}active{% endif %}">Scenarios</a></li>
+                <li><a href="/analytics" class="{% if request.endpoint == 'analytics' %}active{% endif %}">Analytics</a></li>
+                <li><a href="/about" class="{% if request.endpoint == 'about' %}active{% endif %}">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Real Estate Price Prediction System | AI-Powered Market Analysis</p>
+        </div>
+    </footer>
+</body>
+</html>

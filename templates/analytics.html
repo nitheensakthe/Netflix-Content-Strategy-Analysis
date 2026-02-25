@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Model Analytics Dashboard</h1>
+    <p>Performance metrics and model comparisons</p>
+</div>
+
+<div class="analytics-container">
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-icon">🎯</div>
+            <div class="metric-title">Best Model</div>
+            <div class="metric-value">Gradient Boosting</div>
+            <div class="metric-subtitle">94.63% Accuracy (R²)</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon">📊</div>
+            <div class="metric-title">Average Error</div>
+            <div class="metric-value">8.90%</div>
+            <div class="metric-subtitle">MAPE on Test Data</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon">💵</div>
+            <div class="metric-title">RMSE</div>
+            <div class="metric-value">$77,781</div>
+            <div class="metric-subtitle">Root Mean Square Error</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon">🔢</div>
+            <div class="metric-title">Training Data</div>
+            <div class="metric-value">10,000+</div>
+            <div class="metric-subtitle">Property Records</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Model Performance Comparison</h2>
+        <table class="performance-table">
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>R² Score</th>
+                    <th>RMSE</th>
+                    <th>MAE</th>
+                    <th>MAPE (%)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="highlight">
+                    <td><strong>Gradient Boosting</strong></td>
+                    <td>0.9463</td>
+                    <td>$77,781</td>
+                    <td>$54,923</td>
+                    <td>8.90%</td>
+                    <td><span class="badge badge-success">Best</span></td>
+                </tr>
+                <tr>
+                    <td>XGBoost</td>
+                    <td>0.9429</td>
+                    <td>$80,229</td>
+                    <td>$56,541</td>
+                    <td>9.11%</td>
+                    <td><span class="badge badge-info">Excellent</span></td>
+                </tr>
+                <tr>
+                    <td>Random Forest</td>
+                    <td>0.9304</td>
+                    <td>$88,556</td>
+                    <td>$61,205</td>
+                    <td>10.55%</td>
+                    <td><span class="badge badge-info">Good</span></td>
+                </tr>
+                <tr>
+                    <td>Ridge Regression</td>
+                    <td>0.8845</td>
+                    <td>$113,905</td>
+                    <td>$82,341</td>
+                    <td>13.22%</td>
+                    <td><span class="badge badge-warning">Fair</span></td>
+                </tr>
+                <tr>
+                    <td>Lasso Regression</td>
+                    <td>0.8842</td>
+                    <td>$114,001</td>
+                    <td>$82,398</td>
+                    <td>13.24%</td>
+                    <td><span class="badge badge-warning">Fair</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Model Accuracy Visualization</h2>
+        <div class="chart-container">
+            <div id="accuracyChart"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Error Metrics Comparison</h2>
+        <div class="chart-container">
+            <div id="errorChart"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Key Features Analyzed</h2>
+        <div class="features-grid">
+            <div class="feature-box">
+                <h4>Property Characteristics</h4>
+                <ul>
+                    <li>Area (square feet)</li>
+                    <li>Number of bedrooms</li>
+                    <li>Number of bathrooms</li>
+                    <li>Property age</li>
+                    <li>Property type</li>
+                </ul>
+            </div>
+
+            <div class="feature-box">
+                <h4>Location Factors</h4>
+                <ul>
+                    <li>Location type (Urban/Suburban/etc.)</li>
+                    <li>Distance to city center</li>
+                    <li>Infrastructure score</li>
+                    <li>Accessibility index</li>
+                </ul>
+            </div>
+
+            <div class="feature-box">
+                <h4>Economic Indicators</h4>
+                <ul>
+                    <li>Interest rates</li>
+                    <li>Inflation rate</li>
+                    <li>Population growth rate</li>
+                    <li>Economic trends</li>
+                </ul>
+            </div>
+
+            <div class="feature-box">
+                <h4>Engineered Features</h4>
+                <ul>
+                    <li>Price per square foot</li>
+                    <li>Area-bedrooms interaction</li>
+                    <li>Economic impact score</li>
+                    <li>Temporal trends</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Data Statistics</h2>
+        <div class="stats-panel">
+            <div class="stat-row">
+                <span class="stat-label">Training Set Size:</span>
+                <span class="stat-value">8,000 properties</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Test Set Size:</span>
+                <span class="stat-value">2,000 properties</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Total Features:</span>
+                <span class="stat-value">23 features</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Price Range:</span>
+                <span class="stat-value">$78,000 - $2,600,000</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Time Period:</span>
+                <span class="stat-value">2015 - 2023</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Accuracy Chart
+    var accuracyData = [{
+        x: ['Gradient Boosting', 'XGBoost', 'Random Forest', 'Ridge', 'Lasso'],
+        y: [0.9463, 0.9429, 0.9304, 0.8845, 0.8842],
+        type: 'bar',
+        marker: {
+            color: ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336']
+        }
+    }];
+
+    var accuracyLayout = {
+        title: 'R² Score by Model',
+        xaxis: {title: 'Model'},
+        yaxis: {title: 'R² Score', range: [0, 1]}
+    };
+
+    Plotly.newPlot('accuracyChart', accuracyData, accuracyLayout);
+
+    // Error Chart
+    var errorData = [
+        {
+            x: ['Gradient Boosting', 'XGBoost', 'Random Forest', 'Ridge', 'Lasso'],
+            y: [8.90, 9.11, 10.55, 13.22, 13.24],
+            name: 'MAPE (%)',
+            type: 'bar',
+            marker: {color: '#FF5722'}
+        }
+    ];
+
+    var errorLayout = {
+        title: 'Mean Absolute Percentage Error by Model',
+        xaxis: {title: 'Model'},
+        yaxis: {title: 'MAPE (%)'}
+    };
+
+    Plotly.newPlot('errorChart', errorData, errorLayout);
+</script>
+{% endblock %}
