@@ -420,6 +420,305 @@ class HousingDataVisualizer:
         print(f"Dashboard saved to {output_path}")
 
 
+    def plot_property_type_analysis(self, data):
+        """Interactive analysis of property types"""
+        if 'property_type' not in data.columns:
+            return None
+        
+        fig = make_subplots(
+            rows=2, cols=2,
+            subplot_titles=('Price by Property Type', 'Count by Property Type',
+                          'Average Area by Type', 'Price per Sqft by Type'),
+            specs=[[{'type': 'box'}, {'type': 'bar'}],
+                   [{'type': 'bar'}, {'type': 'violin'}]]
+        )
+        
+        property_types = data['property_type'].unique()
+        
+        # Box plot for prices
+        for ptype in property_types:
+            ptype_data = data[data['property_type'] == ptype]
+            fig.add_trace(
+                go.Box(y=ptype_data['price'], name=ptype, showlegend=False),
+                row=1, col=1
+            )
+        
+        # Count by type
+        type_counts = data['property_type'].value_counts()
+        fig.add_trace(
+            go.Bar(x=type_counts.index, y=type_counts.values, 
+                   marker_color='lightblue', showlegend=False),
+            row=1, col=2
+        )
+        
+        # Average area
+        avg_area = data.groupby('property_type')['area'].mean().sort_values(ascending=False)
+        fig.add_trace(
+            go.Bar(x=avg_area.index, y=avg_area.values,
+                   marker_color='lightgreen', showlegend=False),
+            row=2, col=1
+        )
+        
+        # Price per sqft violin plot
+        if 'area' in data.columns:
+            data_copy = data.copy()
+            data_copy['price_per_sqft'] = data_copy['price'] / data_copy['area']
+            for ptype in property_types:
+                ptype_data = data_copy[data_copy['property_type'] == ptype]
+                fig.add_trace(
+                    go.Violin(y=ptype_data['price_per_sqft'], name=ptype, showlegend=False),
+                    row=2, col=2
+                )
+        
+        fig.update_xaxes(title_text="Property Type", row=1, col=1)
+        fig.update_xaxes(title_text="Property Type", row=1, col=2)
+        fig.update_xaxes(title_text="Property Type", row=2, col=1)
+        fig.update_xaxes(title_text="Property Type", row=2, col=2)
+        
+        fig.update_yaxes(title_text="Price ($)", row=1, col=1)
+        fig.update_yaxes(title_text="Count", row=1, col=2)
+        fig.update_yaxes(title_text="Avg Area (sqft)", row=2, col=1)
+        fig.update_yaxes(title_text="Price/Sqft ($)", row=2, col=2)
+        
+        fig.update_layout(height=800, title_text="Property Type Comprehensive Analysis")
+        return fig
+    
+    def plot_price_heatmap_by_features(self, data):
+        """Heatmap showing average price by location and property type"""
+        if 'location_type' not in data.columns or 'property_type' not in data.columns:
+            return None
+        
+        # Create pivot table
+        pivot_data = data.pivot_table(
+            values='price',
+            index='location_type',
+            columns='property_type',
+            aggfunc='mean'
+        )
+        
+        fig = go.Figure(data=go.Heatmap(
+            z=pivot_data.values,
+            x=pivot_data.columns,
+            y=pivot_data.index,
+            colorscale='Viridis',
+            text=pivot_data.values,
+            texttemplate='$%{text:,.0f}',
+            textfont={"size": 10},
+            colorbar=dict(title="Price ($)")
+        ))
+        
+        fig.update_layout(
+            title='Average Price Heatmap: Location vs Property Type',
+            xaxis_title='Property Type',
+            yaxis_title='Location Type',
+            height=500
+        )
+        
+        return fig
+    
+    def plot_feature_vs_price(self, data, feature_name):
+        """Scatter plot with trend line for any feature vs price"""
+        if feature_name not in data.columns:
+            return None
+        
+        fig = px.scatter(
+            data, 
+            x=feature_name, 
+            y='price',
+            trendline='lowess',
+            trendline_color_override='red',
+            opacity=0.6,
+            labels={feature_name: feature_name.replace('_', ' ').title(), 'price': 'Price ($)'},
+            title=f'Price vs {feature_name.replace("_", " ").title()}'
+        )
+        
+        fig.update_layout(height=500)
+        return fig
+    
+    def plot_3d_price_analysis(self, data):
+        """3D scatter plot of price vs area vs location"""
+        if 'area' not in data.columns or 'location_type' not in data.columns:
+            return None
+        
+        fig = px.scatter_3d(
+            data,
+            x='area',
+            y='bedrooms' if 'bedrooms' in data.columns else data.columns[1],
+            z='price',
+            color='location_type' if 'location_type' in data.columns else None,
+            size='bathrooms' if 'bathrooms' in data.columns else None,
+            hover_data=['property_type'] if 'property_type' in data.columns else None,
+            labels={'area': 'Area (sqft)', 'bedrooms': 'Bedrooms', 'price': 'Price ($)'},
+            title='3D Price Analysis: Area, Bedrooms, and Price',
+            opacity=0.7
+        )
+        
+        fig.update_layout(height=700)
+        return fig
+    
+    def plot_time_series_decomposition(self, data):
+        """Decompose price time series into trend, seasonal, and residual"""
+        if 'date' not in data.columns:
+            return None
+        
+        # Prepare monthly data
+        data_sorted = data.sort_values('date')
+        data_sorted['year_month'] = data_sorted['date'].dt.to_period('M')
+        monthly_avg = data_sorted.groupby('year_month')['price'].mean()
+        
+        # Create subplots
+        fig = make_subplots(
+            rows=3, cols=1,
+            subplot_titles=('Original Price Time Series', 'Moving Average (Trend)', 'Volatility'),
+            vertical_spacing=0.1
+        )
+        
+        # Original series
+        fig.add_trace(
+            go.Scatter(x=monthly_avg.index.astype(str), y=monthly_avg.values,
+                      mode='lines', name='Original', line=dict(color='blue')),
+            row=1, col=1
+        )
+        
+        # Moving average (trend)
+        if len(monthly_avg) >= 12:
+            ma_12 = monthly_avg.rolling(window=12, center=True).mean()
+            fig.add_trace(
+                go.Scatter(x=ma_12.index.astype(str), y=ma_12.values,
+                          mode='lines', name='12-Month MA', line=dict(color='red', width=3)),
+                row=2, col=1
+            )
+        
+        # Volatility (rolling std)
+        if len(monthly_avg) >= 12:
+            volatility = monthly_avg.rolling(window=12).std()
+            fig.add_trace(
+                go.Scatter(x=volatility.index.astype(str), y=volatility.values,
+                          mode='lines', name='Volatility', line=dict(color='orange'),
+                          fill='tozeroy'),
+                row=3, col=1
+            )
+        
+        fig.update_xaxes(title_text="Date", row=3, col=1)
+        fig.update_yaxes(title_text="Price ($)", row=1, col=1)
+        fig.update_yaxes(title_text="Price ($)", row=2, col=1)
+        fig.update_yaxes(title_text="Std Dev ($)", row=3, col=1)
+        
+        fig.update_layout(height=900, title_text="Price Time Series Decomposition", showlegend=True)
+        return fig
+    
+    def plot_price_distribution_advanced(self, data):
+        """Advanced price distribution with multiple visualizations"""
+        fig = make_subplots(
+            rows=2, cols=2,
+            subplot_titles=('Price Distribution', 'Log Price Distribution',
+                          'Price by Bedrooms', 'Price by Bathrooms'),
+            specs=[[{'type': 'histogram'}, {'type': 'histogram'}],
+                   [{'type': 'box'}, {'type': 'box'}]]
+        )
+        
+        # Price histogram
+        fig.add_trace(
+            go.Histogram(x=data['price'], nbinsx=50, name='Price',
+                        marker_color='skyblue', showlegend=False),
+            row=1, col=1
+        )
+        
+        # Log price histogram
+        fig.add_trace(
+            go.Histogram(x=np.log10(data['price']), nbinsx=50, name='Log Price',
+                        marker_color='lightcoral', showlegend=False),
+            row=1, col=2
+        )
+        
+        # Price by bedrooms
+        if 'bedrooms' in data.columns:
+            for bedroom in sorted(data['bedrooms'].unique()):
+                bedroom_data = data[data['bedrooms'] == bedroom]
+                fig.add_trace(
+                    go.Box(y=bedroom_data['price'], name=f'{int(bedroom)} BR', showlegend=False),
+                    row=2, col=1
+                )
+        
+        # Price by bathrooms
+        if 'bathrooms' in data.columns:
+            for bathroom in sorted(data['bathrooms'].unique()):
+                bathroom_data = data[data['bathrooms'] == bathroom]
+                fig.add_trace(
+                    go.Box(y=bathroom_data['price'], name=f'{int(bathroom)} BA', showlegend=False),
+                    row=2, col=2
+                )
+        
+        fig.update_xaxes(title_text="Price ($)", row=1, col=1)
+        fig.update_xaxes(title_text="Log10(Price)", row=1, col=2)
+        fig.update_xaxes(title_text="Bedrooms", row=2, col=1)
+        fig.update_xaxes(title_text="Bathrooms", row=2, col=2)
+        
+        fig.update_yaxes(title_text="Count", row=1, col=1)
+        fig.update_yaxes(title_text="Count", row=1, col=2)
+        fig.update_yaxes(title_text="Price ($)", row=2, col=1)
+        fig.update_yaxes(title_text="Price ($)", row=2, col=2)
+        
+        fig.update_layout(height=800, title_text="Comprehensive Price Distribution Analysis")
+        return fig
+    
+    def plot_correlation_network(self, data):
+        """Interactive correlation network diagram"""
+        numerical_cols = data.select_dtypes(include=[np.number]).columns[:10]  # Limit to 10 features
+        corr_matrix = data[numerical_cols].corr()
+        
+        # Create network edges for strong correlations
+        edges_x = []
+        edges_y = []
+        edge_colors = []
+        
+        # Position nodes in circle
+        n = len(numerical_cols)
+        angles = np.linspace(0, 2*np.pi, n, endpoint=False)
+        x_pos = np.cos(angles)
+        y_pos = np.sin(angles)
+        
+        # Add edges for correlations > 0.3
+        for i in range(n):
+            for j in range(i+1, n):
+                if abs(corr_matrix.iloc[i, j]) > 0.3:
+                    edges_x.extend([x_pos[i], x_pos[j], None])
+                    edges_y.extend([y_pos[i], y_pos[j], None])
+                    edge_colors.append(corr_matrix.iloc[i, j])
+        
+        fig = go.Figure()
+        
+        # Add edges
+        fig.add_trace(go.Scatter(
+            x=edges_x, y=edges_y,
+            mode='lines',
+            line=dict(color='gray', width=1),
+            hoverinfo='none',
+            showlegend=False
+        ))
+        
+        # Add nodes
+        fig.add_trace(go.Scatter(
+            x=x_pos, y=y_pos,
+            mode='markers+text',
+            marker=dict(size=20, color='lightblue', line=dict(color='darkblue', width=2)),
+            text=numerical_cols,
+            textposition='top center',
+            hoverinfo='text',
+            showlegend=False
+        ))
+        
+        fig.update_layout(
+            title='Feature Correlation Network (|r| > 0.3)',
+            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            height=600,
+            plot_bgcolor='white'
+        )
+        
+        return fig
+
+
 if __name__ == "__main__":
     # Example usage
     visualizer = HousingDataVisualizer()

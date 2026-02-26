@@ -111,6 +111,66 @@
         </div>
     </div>
 
+    {% if advanced_charts %}
+    <div class="section">
+        <h2>📊 Advanced Data Visualizations</h2>
+    </div>
+
+    {% if advanced_charts.price_distribution %}
+    <div class="section">
+        <h3>Price Distribution Analysis</h3>
+        <div class="chart-container">
+            <div id="priceDistributionChart"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if advanced_charts.property_type %}
+    <div class="section">
+        <h3>Property Type Comprehensive Analysis</h3>
+        <div class="chart-container">
+            <div id="propertyTypeChart"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if advanced_charts.heatmap %}
+    <div class="section">
+        <h3>Price Heatmap: Location vs Property Type</h3>
+        <div class="chart-container">
+            <div id="heatmapChart"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if advanced_charts.analysis_3d %}
+    <div class="section">
+        <h3>3D Interactive Price Analysis</h3>
+        <div class="chart-container">
+            <div id="chart3D"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if advanced_charts.time_series %}
+    <div class="section">
+        <h3>Time Series Decomposition</h3>
+        <div class="chart-container">
+            <div id="timeSeriesChart"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if advanced_charts.correlation_network %}
+    <div class="section">
+        <h3>Feature Correlation Network</h3>
+        <div class="chart-container">
+            <div id="correlationNetworkChart"></div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
     <div class="section">
         <h2>Key Features Analyzed</h2>
         <div class="features-grid">
@@ -221,5 +281,40 @@
     };
 
     Plotly.newPlot('errorChart', errorData, errorLayout);
+
+    // Advanced Charts
+    {% if advanced_charts %}
+    
+    {% if advanced_charts.price_distribution %}
+    var priceDistData = {{ advanced_charts.price_distribution | safe }};
+    Plotly.newPlot('priceDistributionChart', priceDistData.data, priceDistData.layout);
+    {% endif %}
+
+    {% if advanced_charts.property_type %}
+    var propertyTypeData = {{ advanced_charts.property_type | safe }};
+    Plotly.newPlot('propertyTypeChart', propertyTypeData.data, propertyTypeData.layout);
+    {% endif %}
+
+    {% if advanced_charts.heatmap %}
+    var heatmapData = {{ advanced_charts.heatmap | safe }};
+    Plotly.newPlot('heatmapChart', heatmapData.data, heatmapData.layout);
+    {% endif %}
+
+    {% if advanced_charts.analysis_3d %}
+    var chart3DData = {{ advanced_charts.analysis_3d | safe }};
+    Plotly.newPlot('chart3D', chart3DData.data, chart3DData.layout);
+    {% endif %}
+
+    {% if advanced_charts.time_series %}
+    var timeSeriesData = {{ advanced_charts.time_series | safe }};
+    Plotly.newPlot('timeSeriesChart', timeSeriesData.data, timeSeriesData.layout);
+    {% endif %}
+
+    {% if advanced_charts.correlation_network %}
+    var correlationNetworkData = {{ advanced_charts.correlation_network | safe }};
+    Plotly.newPlot('correlationNetworkChart', correlationNetworkData.data, correlationNetworkData.layout);
+    {% endif %}
+
+    {% endif %}
 </script>
 {% endblock %}

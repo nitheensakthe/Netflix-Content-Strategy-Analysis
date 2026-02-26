@@ -9,16 +9,19 @@ import sys
 import pandas as pd
 from datetime import datetime
 import json
+import plotly
 
 # Import custom modules
 from predictor import HousingPricePredictor
 from models import HousingPriceModels
+from visualizer import HousingDataVisualizer
 import config
 
 app = Flask(__name__)
 
-# Initialize predictor globally
+# Initialize predictor and visualizer globally
 predictor = HousingPricePredictor()
+visualizer = HousingDataVisualizer()
 
 # Load models on startup
 try:
@@ -139,11 +142,28 @@ def forecast():
                 'trend': 'Increasing' if total_change > 0 else 'Decreasing'
             }
             
+            # Generate advanced forecast visualizations
+            advanced_forecast_charts = {}
+            try:
+                # Interactive forecast with confidence bands
+                interactive_forecast = visualizer.plot_interactive_forecast(forecast_df)
+                if interactive_forecast:
+                    advanced_forecast_charts['interactive'] = json.dumps(interactive_forecast, cls=plotly.utils.PlotlyJSONEncoder)
+                
+                # Economic factors impact
+                economic_impact = visualizer.plot_economic_factors_impact(forecast_df, show=False)
+                if economic_impact:
+                    advanced_forecast_charts['economic'] = json.dumps(economic_impact, cls=plotly.utils.PlotlyJSONEncoder)
+                    
+            except Exception as viz_error:
+                print(f"Error creating forecast visualizations: {viz_error}")
+            
             return render_template('forecast.html',
                                  forecast_data=json.dumps(forecast_data),
                                  summary=summary,
                                  property_data=property_data,
-                                 months=months)
+                                 months=months,
+                                 advanced_forecast_charts=advanced_forecast_charts)
         
         except Exception as e:
             return render_template('forecast.html', error=str(e))
@@ -227,7 +247,7 @@ def scenarios():
 
 @app.route('/analytics')
 def analytics():
-    """Analytics dashboard page"""
+    """Analytics dashboard page with enhanced visualizations"""
     try:
         # Load model scores
         models_path = os.path.join(config.MODELS_DIR, 'model_scores.pkl')
@@ -250,10 +270,55 @@ def analytics():
         # Get best model
         best_model = min(model_scores.items(), key=lambda x: x[1]['rmse'])
         
+        # Load housing data for advanced visualizations
+        data_path = os.path.join(config.DATA_DIR, 'housing_data.csv')
+        advanced_charts = {}
+        
+        if os.path.exists(data_path):
+            data = pd.read_csv(data_path)
+            if 'date' in data.columns:
+                data['date'] = pd.to_datetime(data['date'])
+            
+            # Generate advanced visualizations
+            try:
+                # Property type analysis
+                prop_type_fig = visualizer.plot_property_type_analysis(data)
+                if prop_type_fig:
+                    advanced_charts['property_type'] = json.dumps(prop_type_fig, cls=plotly.utils.PlotlyJSONEncoder)
+                
+                # Price heatmap
+                heatmap_fig = visualizer.plot_price_heatmap_by_features(data)
+                if heatmap_fig:
+                    advanced_charts['heatmap'] = json.dumps(heatmap_fig, cls=plotly.utils.PlotlyJSONEncoder)
+                
+                # 3D analysis
+                fig_3d = visualizer.plot_3d_price_analysis(data)
+                if fig_3d:
+                    advanced_charts['analysis_3d'] = json.dumps(fig_3d, cls=plotly.utils.PlotlyJSONEncoder)
+                
+                # Time series decomposition
+                time_series_fig = visualizer.plot_time_series_decomposition(data)
+                if time_series_fig:
+                    advanced_charts['time_series'] = json.dumps(time_series_fig, cls=plotly.utils.PlotlyJSONEncoder)
+                
+                # Advanced price distribution
+                price_dist_fig = visualizer.plot_price_distribution_advanced(data)
+                if price_dist_fig:
+                    advanced_charts['price_distribution'] = json.dumps(price_dist_fig, cls=plotly.utils.PlotlyJSONEncoder)
+                
+                # Correlation network
+                corr_network_fig = visualizer.plot_correlation_network(data)
+                if corr_network_fig:
+                    advanced_charts['correlation_network'] = json.dumps(corr_network_fig, cls=plotly.utils.PlotlyJSONEncoder)
+                    
+            except Exception as viz_error:
+                print(f"Error creating advanced visualizations: {viz_error}")
+        
         return render_template('analytics.html',
                              chart_data=json.dumps(chart_data),
                              model_scores=model_scores,
-                             best_model=best_model[0])
+                             best_model=best_model[0],
+                             advanced_charts=advanced_charts)
     
     except Exception as e:
         return render_template('analytics.html', error=str(e))

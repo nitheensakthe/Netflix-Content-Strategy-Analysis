@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Real Estate Price Prediction{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' width='100' height='100' rx='20'/><path fill='white' d='M50 20 L80 45 L70 45 L70 75 L30 75 L30 45 L20 45 Z'/><rect fill='%23fbbf24' x='40' y='55' width='8' height='8' rx='1'/><rect fill='%23fbbf24' x='52' y='55' width='8' height='8' rx='1'/><rect fill='%23764ba2' x='44' y='65' width='12' height='10' rx='1'/></svg>" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
@@ -11,7 +12,23 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1>🏠 Real Estate Price Predictor</h1>
+                <a href="/" class="logo-link">
+                    <div class="logo-container">
+                        <div class="logo-icon">
+                            <div class="house-roof"></div>
+                            <div class="house-body"></div>
+                            <div class="house-door"></div>
+                            <div class="house-window house-window-left"></div>
+                            <div class="house-window house-window-right"></div>
+                            <div class="sparkle sparkle-1">✨</div>
+                            <div class="sparkle sparkle-2">✨</div>
+                        </div>
+                        <div class="logo-text">
+                            <span class="logo-title">RealEstate<span class="logo-ai">AI</span></span>
+                            <span class="logo-subtitle">Price Predictor</span>
+                        </div>
+                    </div>
+                </a>
             </div>
             <ul class="nav-menu">
                 <li><a href="/" class="{% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>

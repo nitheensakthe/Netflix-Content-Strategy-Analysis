@@ -148,6 +148,22 @@
             <div id="forecastChart"></div>
         </div>
 
+        {% if advanced_forecast_charts %}
+        {% if advanced_forecast_charts.interactive %}
+        <div class="chart-container">
+            <h3>Interactive Forecast with Confidence Intervals</h3>
+            <div id="interactiveForecastChart"></div>
+        </div>
+        {% endif %}
+
+        {% if advanced_forecast_charts.economic %}
+        <div class="chart-container">
+            <h3>Economic Factors Impact Analysis</h3>
+            <div id="economicImpactChart"></div>
+        </div>
+        {% endif %}
+        {% endif %}
+
         <div class="forecast-table-container">
             <h3>Monthly Breakdown</h3>
             <table class="results-table">
@@ -221,6 +237,21 @@
         };
 
         Plotly.newPlot('forecastChart', [trace], layout);
+
+        // Advanced forecast charts
+        {% if advanced_forecast_charts %}
+        
+        {% if advanced_forecast_charts.interactive %}
+        var interactiveForecastData = {{ advanced_forecast_charts.interactive | safe }};
+        Plotly.newPlot('interactiveForecastChart', interactiveForecastData.data, interactiveForecastData.layout);
+        {% endif %}
+
+        {% if advanced_forecast_charts.economic %}
+        var economicImpactData = {{ advanced_forecast_charts.economic | safe }};
+        Plotly.newPlot('economicImpactChart', economicImpactData.data, economicImpactData.layout);
+        {% endif %}
+
+        {% endif %}
     </script>
     {% endif %}
 </div>
